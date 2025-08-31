@@ -3,6 +3,10 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit import runtime
 from aiagent import AIAgent
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 st.set_page_config(layout="wide")
 
@@ -33,10 +37,7 @@ def get_remote_ip() -> str:
 session_id = get_remote_ip()
 
 
-try:
-    nsfw_password = st.secrets["CHAT_NSFW_PASSWORD"]
-except Exception as e:
-    nsfw_password = os.getenv("CHAT_NSFW_PASSWORD")
+nsfw_password = os.getenv("CHAT_NSFW_PASSWORD")
 
 
 @st.cache_resource

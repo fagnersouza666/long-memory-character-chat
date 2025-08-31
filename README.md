@@ -3,6 +3,41 @@
 
  [Check it out here!](https://long-memory-character-chat.streamlit.app/)
 
+## Configuration
+
+### API Keys Configuration
+
+This project now supports configuration of API keys through a `.env` file for better security and easier management. To configure your API keys:
+
+1. Copy the `.env.example` file to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and add your API keys:
+   ```env
+   # Chaves de API para modelos de linguagem
+   OPENAI_API_KEY=your_openai_api_key_here
+   GOOGLE_API_KEY=your_google_api_key_here
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   TOGETHER_API_KEY=your_together_api_key_here
+   LAMBDA_API_KEY=your_lambda_api_key_here
+
+   # Configurações de segurança
+   CHAT_NSFW_PASSWORD=your_nsfw_password_here
+   ADMIN_PASSWORD=your_admin_password_here
+   ```
+
+3. Install the required dependency:
+   ```bash
+   pip install python-dotenv
+   ```
+
+4. Run the application as usual:
+   ```bash
+   streamlit run app.py
+   ```
+
 # Problem Statements
 
 I've experimented (and enjoyed) many different character role-playing ai services recently.  My favorites are [Character.ai](https://beta.character.ai/), [Doppel.ai](https://beta.dopple.ai/), and [Poly.ai by Cloud Whale Interactive Technology](https://poly.socialapps.ai/) (not to be confused with poly.ai the customer service chatbot developers)

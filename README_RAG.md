@@ -109,10 +109,33 @@ pip install -r requirements.txt
 ```
 
 4. Configure as variáveis de ambiente:
+
+Opção 1 - Usando variáveis de ambiente diretamente:
 ```bash
 export OPENAI_API_KEY="sua-chave-openai"
 export GOOGLE_API_KEY="sua-chave-google"  # opcional
 export ANTHROPIC_API_KEY="sua-chave-anthropic"  # opcional
+```
+
+Opção 2 - Usando arquivo .env (recomendado):
+
+Copie o arquivo `.env.example` para `.env` e edite com suas chaves:
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` e adicione suas chaves de API:
+```env
+# Chaves de API para modelos de linguagem
+OPENAI_API_KEY=sua_chave_aqui
+GOOGLE_API_KEY=sua_chave_aqui
+ANTHROPIC_API_KEY=sua_chave_aqui
+TOGETHER_API_KEY=sua_chave_aqui
+LAMBDA_API_KEY=sua_chave_aqui
+
+# Configurações de segurança
+CHAT_NSFW_PASSWORD=sua_senha_aqui
+ADMIN_PASSWORD=sua_senha_admin_aqui
 ```
 
 5. Execute a aplicação:

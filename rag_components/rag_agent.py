@@ -9,6 +9,10 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from rag_components.document_processor import DocumentProcessor
 from rag_components.query_processor import QueryProcessor
 from rag_components.evaluation_manager import EvaluationManager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class RAGDocument:
@@ -78,39 +82,22 @@ class RAGAgent:
         """Change the model the AI uses to generate responses."""
         self.model = model
         if "gpt" in self.model:
-            try:
-                api_key = os.getenv("OPENAI_API_KEY")
-            except:
-                api_key = st.secrets["OPENAI_API_KEY"]
+            api_key = os.getenv("OPENAI_API_KEY")
             self.agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.openai.com/v1"
             )
         
         elif "gemini" in self.model:
-            try:
-                GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-            except:
-                GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
-            
+            GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
             genai.configure(api_key=GOOGLE_API_KEY)
             self.agent = genai.GenerativeModel(model_name=self.model)
         
         elif "claude" in self.model:
-            try:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-            except:
-                try:
-                    api_key = st.secrets["ANTHROPIC_API_KEY"]
-                except Exception as e:
-                    print(e)
-            
+            api_key = os.getenv("ANTHROPIC_API_KEY")
             self.agent = anthropic.Anthropic(api_key=api_key)
         
         else:
-            try:
-                api_key = os.getenv("TOGETHER_API_KEY")
-            except:
-                api_key = st.secrets["TOGETHER_API_KEY"]
+            api_key = os.getenv("TOGETHER_API_KEY")
             self.agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.together.xyz/v1"
             )
@@ -119,39 +106,22 @@ class RAGAgent:
         """Change the model the AI uses to summarize conversations."""
         self.summary_model = summary_model
         if "gpt" in self.summary_model:
-            try:
-                api_key = os.getenv("OPENAI_API_KEY")
-            except:
-                api_key = st.secrets["OPENAI_API_KEY"]
+            api_key = os.getenv("OPENAI_API_KEY")
             self.summary_agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.openai.com/v1"
             )
         
         elif "gemini" in self.summary_model:
-            try:
-                GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-            except:
-                GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
-            
+            GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
             genai.configure(api_key=GOOGLE_API_KEY)
             self.summary_agent = genai.GenerativeModel(model_name=self.summary_model)
         
         elif "claude" in self.summary_model:
-            try:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-            except:
-                try:
-                    api_key = st.secrets["ANTHROPIC_API_KEY"]
-                except Exception as e:
-                    print(e)
-            
+            api_key = os.getenv("ANTHROPIC_API_KEY")
             self.summary_agent = anthropic.Anthropic(api_key=api_key)
         
         else:
-            try:
-                api_key = os.getenv("TOGETHER_API_KEY")
-            except:
-                api_key = st.secrets["TOGETHER_API_KEY"]
+            api_key = os.getenv("TOGETHER_API_KEY")
             self.summary_agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.together.xyz/v1"
             )

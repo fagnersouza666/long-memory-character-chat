@@ -6,11 +6,12 @@ import os, datetime, pickle, time
 import google.generativeai as genai
 import anthropic
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from dotenv import load_dotenv
 
-try:
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-except:
-    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+# Load environment variables from .env file
+load_dotenv()
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
@@ -151,10 +152,7 @@ class AIAgent:
         """Change the model the AI uses to generate responses.  Defaults to: 'open-mistral-7b'"""
         self.model = model
         if "gpt" in self.model:
-            try:
-                api_key = os.getenv("OPENAI_API_KEY")
-            except:
-                api_key = st.secrets["OPENAI_API_KEY"]
+            api_key = os.getenv("OPENAI_API_KEY")
             self.agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.openai.com/v1"
             )
@@ -163,33 +161,17 @@ class AIAgent:
             self.agent = genai.GenerativeModel(model_name=self.model)
 
         elif "claude" in self.model:
-            try:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-            except:
-                try:
-                    api_key = st.secrets["ANTHROPIC_API_KEY"]
-                except Exception as e:
-                    print(e)
-
+            api_key = os.getenv("ANTHROPIC_API_KEY")
             self.agent = anthropic.Anthropic(api_key=api_key)
 
         elif "hermes" in self.model:
-            try:
-                api_key = os.getenv("LAMBDA_API_KEY")
-            except:
-                try:
-                    api_key = st.secrets("LAMBDA_API_KEY")
-                except Exception as e:
-                    print(e)
+            api_key = os.getenv("LAMBDA_API_KEY")
             self.agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.lambdalabs.com/v1"
             )
 
         else:
-            try:
-                api_key = os.getenv("TOGETHER_API_KEY")
-            except:
-                api_key = st.secrets["TOGETHER_API_KEY"]
+            api_key = os.getenv("TOGETHER_API_KEY")
             self.agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.together.xyz/v1"
             )
@@ -198,33 +180,22 @@ class AIAgent:
         """Change the model the AI uses to summarize conversations.  Defaults to: 'open-mistral-7b'"""
         self.summary_model = summary_model
         if "gpt" in self.summary_model:
-            try:
-                api_key = os.getenv("OPENAI_API_KEY")
-            except:
-                api_key = st.secrets["OPENAI_API_KEY"]
+            api_key = os.getenv("OPENAI_API_KEY")
             self.summary_agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.openai.com/v1"
             )
 
         elif "gemini" in self.summary_model:
+            GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+            genai.configure(api_key=GOOGLE_API_KEY)
             self.summary_agent = genai.GenerativeModel(model_name=self.summary_model)
 
         elif "claude" in self.summary_model:
-            try:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-            except:
-                try:
-                    api_key = st.secrets["ANTHROPIC_API_KEY"]
-                except Exception as e:
-                    print(e)
-
+            api_key = os.getenv("ANTHROPIC_API_KEY")
             self.summary_agent = anthropic.Anthropic(api_key=api_key)
 
         else:
-            try:
-                api_key = os.getenv("TOGETHER_API_KEY")
-            except:
-                api_key = st.secrets["TOGETHER_API_KEY"]
+            api_key = os.getenv("TOGETHER_API_KEY")
             self.summary_agent = openai.OpenAI(
                 api_key=api_key, base_url="https://api.together.xyz/v1"
             )
