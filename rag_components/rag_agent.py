@@ -200,6 +200,9 @@ class RAGAgent:
         elif model.startswith("gpt-4o-mini"):
             input_cost = 0.00015 / 1000
             output_cost = 0.0006 / 1000
+        elif model.startswith("gpt-5-mini"):
+            input_cost = 0.00015 / 1000  # Ajustar com os valores reais quando disponíveis
+            output_cost = 0.0006 / 1000  # Ajustar com os valores reais quando disponíveis
         elif model.startswith("gpt-4"):
             input_cost = 0.01 / 1000
             output_cost = 0.03 / 1000
