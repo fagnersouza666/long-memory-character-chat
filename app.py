@@ -20,16 +20,19 @@ def get_remote_ip() -> str:
         ctx = get_script_run_ctx()
         if ctx is None:
             print("no session id .")
-            return None
+            return ""
         else:
-            return ctx.session_id
+            session_id = ctx.session_id
+            if session_id is None:
+                return ""
+            return session_id
 
         # session_info = runtime.get_instance().get_client(ctx.session_id)
     #     if session_info is None:
     #         return None
     except Exception as e:
         print("could not retrieve session id", e)
-        return None
+        return ""
 
     # return session_info.request.remote_ip
 
@@ -55,12 +58,16 @@ def query_agent(
 ):
     """Query the AI agent.  Returns a string."""
     try:
+        # Converter top_p para float se for None
+        if top_p is None:
+            top_p = 0.0
+            
         st.session_state["agent"].query(
             prompt,
-            temperature=temperature,
-            top_p=top_p,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
+            temperature=float(temperature),
+            top_p=float(top_p) if top_p is not None else None,
+            frequency_penalty=int(frequency_penalty),
+            presence_penalty=int(presence_penalty),
         )
     except Exception as e:
         print("failed to query the agent")
@@ -130,8 +137,7 @@ def change_summary_model():
         if "summary_model_name" in st.session_state:
             st.session_state["agent"] = get_agent(
                 session_id,
-                model=st.session_state["model_name"],
-                summary_model=st.session_state["summary_model_name"],
+                model=st.session_state["model_name"]
             )
         else:
             st.session_state["agent"] = get_agent(session_id)
@@ -240,8 +246,8 @@ with st.sidebar:
         )
         # set the top_p value
         top_p = 1 - top_p
-        if top_p == 1 or 0:
-            top_p = None
+        if top_p == 1.0 or top_p == 0.0:
+            top_p = 0.0
 
         # set the model
         st.markdown("### Choose a model")
@@ -375,8 +381,8 @@ with st.container(border=True):
                 prompt,
                 temperature=temperature,
                 top_p=top_p,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
+                frequency_penalty=int(frequency_penalty),
+                presence_penalty=int(presence_penalty),
             )
 
 # add a donate button
