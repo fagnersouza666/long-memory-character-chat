@@ -160,6 +160,7 @@ def format_model_label(model):
         ("WizardLM 13b v1.2", "WizardLM/WizardLM-13B-V1.2"),
         ("Claude 3 Haiku", "claude-3-haiku-20240307"),
         ("GPT 4o mini", "gpt-4o-mini"),
+        ("GPT 5 mini", "gpt-5-mini"),
         ("Meta Llama-3 8b Chat", "meta-llama/Llama-3-8b-chat-hf"),
         (
             "Meta Llama-3.1 8b Instruct Turbo",
@@ -251,6 +252,7 @@ with st.sidebar:
                 "gemini-2.5-flash",
                 "claude-3-haiku-20240307",
                 "gpt-4o-mini",
+                "gpt-5-mini"
             ],
             index=0,
             format_func=format_model_label,
@@ -264,6 +266,7 @@ with st.sidebar:
                 "gemini-2.5-flash",
                 # "hermes-3-llama-3.1-405b-fp8",
                 "gpt-4o-mini",
+                "gpt-5-mini",
                 "mistralai/Mistral-7B-Instruct-v0.3",
                 "claude-3-haiku-20240307",
                 "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
