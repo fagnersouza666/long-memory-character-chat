@@ -260,7 +260,7 @@ with st.sidebar:
                 "gpt-4o-mini",
                 "gpt-5-mini"
             ],
-            index=0,
+            index=3,
             format_func=format_model_label,
             key="summary_model_name",
             on_change=change_summary_model,
@@ -277,7 +277,7 @@ with st.sidebar:
                 "claude-3-haiku-20240307",
                 "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
             ],
-            index=0,
+            index=2,
             format_func=format_model_label,
             key="model_name",
             on_change=change_model,

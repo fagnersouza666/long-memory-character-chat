@@ -32,9 +32,9 @@ class AIAgent:
 
     def __init__(
         self,
-        model="open-mistral-7b",
+        model="gpt-5-mini",
         embedding_model="gpt",
-        summary_model="gemini-2.5-flash",
+        summary_model="gpt-5-mini",
     ):
         # Initialize the AI agent
         self.set_model(model)
