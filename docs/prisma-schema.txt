@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Extensões PostgreSQL necessárias
+// CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+// CREATE EXTENSION IF NOT EXISTS "vector";
+
+// =============================================================================
+// ORGANIZAÇÕES E WORKSPACES (Multi-tenant)
+// =============================================================================
+
+model Organization {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String   @db.VarChar(255)
+  slug                String   @unique @db.VarChar(100)
+  createdAt           DateTime @default(now()) @map("created_at")
+  active              Boolean  @default(true)
+  monthlyCostLimit    Decimal? @map("monthly_cost_limit") @db.Decimal(10, 2)
+  currentMonthlyCost  Decimal  @default(0) @map("current_monthly_cost") @db.Decimal(10, 2)
+
+  // Relacionamentos
+  users               User[]
+  workspaces          Workspace[]
+  documents           Document[]
+  documentChunks      DocumentChunk[]
+  conversations       Conversation[]
+  conversationMessages ConversationMessage[]
+  costTracking        CostTracking[]
+  rateLimits          RateLimit[]
+  evaluations         Evaluation[]
+  auditLogs           AuditLog[]
+  deletionRequests    DataDeletionRequest[]
+
+  @@map("organizations")
+}
+
+model Workspace {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  name            String   @db.VarChar(255)
+  slug            String   @db.VarChar(100)
+  description     String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  isActive        Boolean  @default(true) @map("is_active")
+
+  // Relacionamentos
+  organization         Organization          @relation(fields: [organizationId], references: [id])
+  userWorkspaces       UserWorkspace[]
+  documents           Document[]
+  documentChunks      DocumentChunk[]
+  conversations       Conversation[]
+  conversationMessages ConversationMessage[]
+  costTracking        CostTracking[]
+  evaluations         Evaluation[]
+  auditLogs           AuditLog[]
+  deletionRequests    DataDeletionRequest[]
+
+  @@unique([organizationId, slug])
+  @@map("workspaces")
+}
+
+// =============================================================================
+// MODELOS DE EMBEDDING E IA
+// =============================================================================
+
+model EmbeddingModel {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @unique @db.VarChar(100)
+  provider      String   @db.VarChar(50) // 'openai', 'cohere', 'huggingface', etc.
+  dimension     Int
+  costPerToken  Decimal? @map("cost_per_token") @db.Decimal(10, 8)
+  isActive      Boolean  @default(true) @map("is_active")
+  isDefault     Boolean  @default(false) @map("is_default")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  documents      Document[]
+  documentChunks DocumentChunk[]
+
+  @@map("embedding_models")
+}
+
+// =============================================================================
+// USUÁRIOS E CONTROLE DE ACESSO
+// =============================================================================
+
+enum UserRole {
+  super_admin
+  tenant_admin
+  manager
+  employee
+}
+
+enum WorkspaceRole {
+  admin
+  member
+  viewer
+}
+
+model User {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  username       String   @db.VarChar(100)
+  email          String   @unique @db.VarChar(255)
+  passwordHash   String   @map("password_hash") @db.VarChar(255)
+  role           UserRole
+  createdAt      DateTime @default(now()) @map("created_at")
+  isActive       Boolean  @default(true) @map("is_active")
+
+  // Relacionamentos
+  organization         Organization          @relation(fields: [organizationId], references: [id])
+  userWorkspaces       UserWorkspace[]
+  uploadedDocuments    Document[]            @relation("DocumentUploader")
+  conversations        Conversation[]
+  evaluationsAsEmployee Evaluation[]         @relation("EmployeeEvaluations")
+  evaluationsAsEvaluator Evaluation[]        @relation("EvaluatorEvaluations")
+  rateLimits           RateLimit[]
+  auditLogs            AuditLog[]
+  deletionRequests     DataDeletionRequest[]
+
+  @@unique([organizationId, username])
+  @@map("users")
+}
+
+model UserWorkspace {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  workspaceId String        @map("workspace_id") @db.Uuid
+  role        WorkspaceRole
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  // Relacionamentos
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+  @@map("user_workspaces")
+}
+
+// =============================================================================
+// DOCUMENTOS E EMBEDDINGS
+// =============================================================================
+
+enum DocumentStatus {
+  processing
+  completed
+  error
+}
+
+model Document {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String         @map("organization_id") @db.Uuid
+  workspaceId       String         @map("workspace_id") @db.Uuid
+  title             String         @db.VarChar(500)
+  filePath          String         @map("file_path") @db.VarChar(1000)
+  fileType          String         @map("file_type") @db.VarChar(50)
+  fileSize          BigInt         @map("file_size")
+  uploadedById      String         @map("uploaded_by") @db.Uuid
+  status            DocumentStatus @default(processing)
+  embeddingModelId  String         @map("embedding_model_id") @db.Uuid
+  createdAt         DateTime       @default(now()) @map("created_at")
+  processedAt       DateTime?      @map("processed_at")
+  errorMessage      String?        @map("error_message")
+  contentText       String?        @map("content_text") // Para full-text search
+
+  // Relacionamentos
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id])
+  uploadedBy      User            @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  embeddingModel  EmbeddingModel  @relation(fields: [embeddingModelId], references: [id])
+  chunks          DocumentChunk[]
+
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId       String         @map("document_id") @db.Uuid
+  organizationId   String         @map("organization_id") @db.Uuid
+  workspaceId      String         @map("workspace_id") @db.Uuid
+  chunkIndex       Int            @map("chunk_index")
+  content          String
+  metadata         Json?
+  embeddingModelId String         @map("embedding_model_id") @db.Uuid
+  embedding        Unsupported("vector")?  // pgvector type
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  // Relacionamentos
+  document        Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  organization    Organization   @relation(fields: [organizationId], references: [id])
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id])
+  embeddingModel  EmbeddingModel @relation(fields: [embeddingModelId], references: [id])
+
+  @@map("document_chunks")
+}
+
+// =============================================================================
+// CONVERSAS E MENSAGENS
+// =============================================================================
+
+enum MessageRole {
+  user
+  assistant
+}
+
+model Conversation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String?  @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  organization Organization          @relation(fields: [organizationId], references: [id])
+  workspace    Workspace             @relation(fields: [workspaceId], references: [id])
+  user         User                  @relation(fields: [userId], references: [id])
+  messages     ConversationMessage[]
+
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String      @map("conversation_id") @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  role           MessageRole
+  content        String
+  metadata       Json?
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  // Relacionamentos
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id])
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id])
+
+  @@map("conversation_messages")
+}
+
+// =============================================================================
+// CONTROLE DE CUSTOS E RATE LIMITING
+// =============================================================================
+
+model CostTracking {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  serviceType    String   @map("service_type") @db.VarChar(50) // 'embedding', 'llm_query', 'storage'
+  operationType  String   @map("operation_type") @db.VarChar(50) // 'document_processing', 'query', 'chat'
+  tokensUsed     Int?     @map("tokens_used")
+  costUsd        Decimal? @map("cost_usd") @db.Decimal(10, 6)
+  createdAt      DateTime @default(now()) @map("created_at")
+  metadata       Json?
+
+  // Relacionamentos
+  organization Organization @relation(fields: [organizationId], references: [id])
+  workspace    Workspace?   @relation(fields: [workspaceId], references: [id])
+
+  @@map("cost_tracking")
+}
+
+model RateLimit {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  userId           String?  @map("user_id") @db.Uuid
+  operationType    String   @map("operation_type") @db.VarChar(50) // 'query', 'upload', 'chat'
+  countCurrent     Int      @default(0) @map("count_current")
+  countLimit       Int      @map("count_limit")
+  windowStart      DateTime @default(now()) @map("window_start")
+  windowDuration   String   @default("1 day") @map("window_duration") // PostgreSQL INTERVAL
+
+  // Relacionamentos
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@map("rate_limits")
+}
+
+// =============================================================================
+// AVALIAÇÕES DE FUNCIONÁRIOS
+// =============================================================================
+
+model Evaluation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  employeeId     String   @map("employee_id") @db.Uuid
+  evaluatorId    String   @map("evaluator_id") @db.Uuid
+  period         String   @db.VarChar(20)
+  score          Decimal? @db.Decimal(3, 2)
+  feedback       String?
+  goals          Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  organization Organization @relation(fields: [organizationId], references: [id])
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id])
+  employee     User         @relation("EmployeeEvaluations", fields: [employeeId], references: [id])
+  evaluator    User         @relation("EvaluatorEvaluations", fields: [evaluatorId], references: [id])
+
+  @@map("evaluations")
+}
+
+// =============================================================================
+// AUDITORIA E COMPLIANCE
+// =============================================================================
+
+model AuditLog {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String?   @map("workspace_id") @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  action         String    @db.VarChar(100)
+  resourceType   String    @map("resource_type") @db.VarChar(50)
+  resourceId     String?   @map("resource_id") @db.Uuid
+  oldValues      Json?     @map("old_values")
+  newValues      Json?     @map("new_values")
+  ipAddress      String?   @map("ip_address") @db.Inet
+  userAgent      String?   @map("user_agent")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relacionamentos
+  organization Organization @relation(fields: [organizationId], references: [id])
+  workspace    Workspace?   @relation(fields: [workspaceId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum DeletionRequestStatus {
+  pending
+  processing  
+  completed
+}
+
+enum DeletionRequestType {
+  user_data
+  organization_data
+}
+
+model DataDeletionRequest {
+  id             String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  workspaceId    String?               @map("workspace_id") @db.Uuid
+  userId         String?               @map("user_id") @db.Uuid
+  requestType    DeletionRequestType   @map("request_type")
+  status         DeletionRequestStatus @default(pending)
+  requestedAt    DateTime              @default(now()) @map("requested_at")
+  completedAt    DateTime?             @map("completed_at")
+  metadata       Json?
+
+  // Relacionamentos
+  organization Organization @relation(fields: [organizationId], references: [id])
+  workspace    Workspace?   @relation(fields: [workspaceId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@map("data_deletion_requests")
+}
+
+// =============================================================================
+// ÍNDICES PARA PERFORMANCE
+// =============================================================================
+
+// Índices para busca vetorial (criados via SQL raw)
+// CREATE INDEX idx_chunks_embedding ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+// Índices para full-text search (criados via SQL raw)  
+// CREATE INDEX idx_chunks_search ON document_chunks USING gin(to_tsvector('portuguese', content));
+// CREATE INDEX idx_documents_search ON documents USING gin(to_tsvector('portuguese', title || ' ' || COALESCE(content_text, '')));
+
+// Índices compostos para performance
+// CREATE INDEX idx_documents_org_workspace ON documents(organization_id, workspace_id);
+// CREATE INDEX idx_chunks_org_workspace ON document_chunks(organization_id, workspace_id);
+// CREATE INDEX idx_conversations_org_workspace_user ON conversations(organization_id, workspace_id, user_id);
+// CREATE INDEX idx_cost_tracking_org_date ON cost_tracking(organization_id, created_at);
+// CREATE INDEX idx_audit_logs_org_date ON audit_logs(organization_id, created_at);

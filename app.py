@@ -10,6 +10,12 @@ load_dotenv()
 
 st.set_page_config(layout="wide")
 
+# Initialize session state variables to prevent KeyError
+if "model_name" not in st.session_state:
+    st.session_state["model_name"] = "gpt-5-mini"  # Default model
+if "summary_model_name" not in st.session_state:
+    st.session_state["summary_model_name"] = "gpt-5-mini"  # Default summary model
+
 # get the websocket headers and session id
 
 
