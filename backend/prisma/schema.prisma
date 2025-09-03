@@ -1,6 +1,7 @@
 // schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client-py"
+  interface = "asyncio"
 }
 
 datasource db {
@@ -95,7 +96,7 @@ model DocumentChunk {
   id         Int      @id @default(autoincrement())
   documentId Int
   content    String
-  embedding  Bytes?   // Vetor armazenado como bytes
+  embedding  Bytes?   // Vetor armazenado como bytes inicialmente
   createdAt  DateTime @default(now())
   
   // Relacionamentos

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class UserBase(BaseModel):
     username: str
@@ -13,9 +14,12 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_active: bool = True
+    createdAt: datetime
+    updatedAt: datetime
+    lastLogin: Optional[datetime] = None
 
     class Config:
         orm_mode = True
 
 class UserInDB(User):
-    password_hash: str
+    passwordHash: str

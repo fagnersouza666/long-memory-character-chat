@@ -1,0 +1,7 @@
+[project]
+name = "rag-enterprise"
+schema = "prisma/schema.prisma"
+output = "app/prisma"
+
+[generate]
+client = true
