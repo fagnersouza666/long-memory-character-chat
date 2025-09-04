@@ -167,7 +167,7 @@ class RAGAgent:
         except Exception as e:
             print(f"Error adding evaluation: {e}")
     
-    def query(self, question, temperature=0.1, max_tokens=500) -> dict:
+    def query(self, question, max_tokens=500) -> dict:
         """Query the RAG system for an answer to a question"""
         try:
             if self.vector_store is None:
@@ -180,7 +180,7 @@ class RAGAgent:
             query_processor = QueryProcessor(self.vector_store, self.model)
             
             # Process query
-            result = query_processor.query(question)
+            result = query_processor.query(question, max_tokens)
             
             return result
             

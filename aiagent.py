@@ -327,7 +327,7 @@ class AIAgent:
                     model=self.summary_model,
                     messages=summary_messages,  # this is the conversation history
                     temperature=temperature,  # this is the degree of randomness of the model's output
-                    max_tokens=max_tokens,
+                    max_completion_tokens=max_tokens,
                     top_p=top_p,
                 )
                 summary = response.choices[0].message.content
@@ -353,7 +353,7 @@ class AIAgent:
                 model=self.summary_model,
                 messages=summary_messages,  # this is the conversation history
                 temperature=temperature,  # this is the degree of randomness of the model's output
-                max_tokens=max_tokens,
+                max_completion_tokens=max_tokens,
                 top_p=top_p,
             )
             summary = response.choices[0].message.content
@@ -597,7 +597,7 @@ class AIAgent:
                 temperature=temperature,  # this is the degree of randomness of the model's output
                 frequency_penalty=frequency_penalty,  # This is the penalty for using a token based on frequency in the text.
                 presence_penalty=presence_penalty,  # This is penalty for using a token based on its presence in the text.
-                max_tokens=max_tokens,
+                max_completion_tokens=max_tokens,
                 top_p=top_p,
             )
             content = result.choices[0].message.content

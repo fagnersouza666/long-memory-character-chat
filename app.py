@@ -60,7 +60,7 @@ def get_agent(
 
 
 def query_agent(
-    prompt, temperature=0.1, top_p=0.0, frequency_penalty=0, presence_penalty=0
+    prompt, top_p=0.0, frequency_penalty=0, presence_penalty=0
 ):
     """Query the AI agent.  Returns a string."""
     try:
@@ -70,7 +70,6 @@ def query_agent(
             
         st.session_state["agent"].query(
             prompt,
-            temperature=float(temperature),
             top_p=float(top_p) if top_p is not None else None,
             frequency_penalty=int(frequency_penalty),
             presence_penalty=int(presence_penalty),

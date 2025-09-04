@@ -11,7 +11,8 @@ class QueryProcessor:
     def __init__(self, vector_store, model="gpt-3.5-turbo"):
         self.vector_store = vector_store
         self.model = model
-        self.llm = OpenAI(temperature=0.1, model_name=model)
+        # Removido o parâmetro temperature pois alguns modelos não o suportam
+        self.llm = OpenAI(model_name=model, max_completion_tokens=500)
         
         # Create prompt template
         template = """
@@ -42,8 +43,20 @@ class QueryProcessor:
             return_source_documents=True
         )
     
-    def query(self, question):
+    def query(self, question, max_tokens=500):
         """Process a query and return answer with source documents"""
+        # Atualizar o LLM com os parâmetros fornecidos (sem temperature)
+        self.llm = OpenAI(model_name=self.model, max_completion_tokens=max_tokens)
+        
+        # Recriar a cadeia com o novo LLM
+        self.qa_chain = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=self.vector_store.as_retriever(search_kwargs={"k": 5}),
+            chain_type_kwargs={"prompt": self.prompt_template},
+            return_source_documents=True
+        )
+        
         result = self.qa_chain.invoke({"query": question})
         return {
             "answer": result["result"],
