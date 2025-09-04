@@ -35,9 +35,10 @@ class AIAgent:
         model="gpt-5-mini",
         embedding_model="gpt",
         summary_model="gpt-5-mini",
+        model_prompt=None
     ):
         # Initialize the AI agent
-        self.set_model(model)
+        self.set_model(model, model_prompt)
 
         # initialize the summary model
         self.set_summary_model(summary_model)
@@ -120,6 +121,8 @@ class AIAgent:
 
         # Set the system prompt to instruct the AI on how to role-play
         self.system_prompt = f"""
+        {self.model_prompt}
+        
         Roleplay as {self.character}, named {self.character_name}. 
         {self.message_style_sample}
         Fully embody this character's personality, voice, mannerisms, knowledge, beliefs, and traits. The current situation is: {self.location}.
@@ -148,9 +151,17 @@ class AIAgent:
             + " ",
         }
 
-    def set_model(self, model="gpt-3.5-turbo-0125") -> None:
+    def set_model(self, model="gpt-3.5-turbo-0125", model_prompt=None) -> None:
         """Change the model the AI uses to generate responses.  Defaults to: 'open-mistral-7b'"""
         self.model = model
+        
+        # Se um prompt específico for fornecido, usá-lo
+        if model_prompt:
+            self.model_prompt = model_prompt
+        else:
+            # Prompt padrão se nenhum for fornecido
+            self.model_prompt = f"You are a helpful AI assistant. Respond to the user's queries in a clear and concise manner."
+        
         if "gpt" in self.model:
             api_key = os.getenv("OPENAI_API_KEY")
             self.agent = openai.OpenAI(

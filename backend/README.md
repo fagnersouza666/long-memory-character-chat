@@ -26,13 +26,20 @@ backend/
 │   ├── schemas/
 │   │   ├── __init__.py
 │   │   ├── user.py
-│   │   └── token.py
+│   │   ├── token.py
+│   │   └── model.py
 │   ├── database/
 │   │   ├── __init__.py
 │   │   └── session.py
 │   └── utils/
 │       ├── __init__.py
 │       └── helpers.py
+├── prisma/
+│   ├── migrations/
+│   │   ├── 20250901180926_init/
+│   │   ├── 20250902141024_add_vector_support/
+│   │   └── 20250904150000_add_model_table/
+│   └── schema.prisma
 ├── tests/
 │   └── ...
 ├── requirements.txt
@@ -60,7 +67,19 @@ backend/
    ADMIN_PASSWORD=admin123
    ```
 
-3. Iniciar servidor:
+3. Criar as tabelas no banco de dados:
+   ```bash
+   # Execute o script de migração manualmente ou use:
+   # (Instruções específicas dependem do seu ambiente de banco de dados)
+   ```
+
+4. Configurar os modelos disponíveis:
+   ```bash
+   # Executar o script para inserir os modelos padrão:
+   python setup_models.py
+   ```
+
+5. Iniciar servidor:
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```

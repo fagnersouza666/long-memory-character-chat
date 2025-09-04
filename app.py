@@ -3,6 +3,7 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit import runtime
 from aiagent import AIAgent
 import os
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -15,6 +16,8 @@ if "model_name" not in st.session_state:
     st.session_state["model_name"] = "gpt-5-mini"  # Default model
 if "summary_model_name" not in st.session_state:
     st.session_state["summary_model_name"] = "gpt-5-mini"  # Default summary model
+if "model_prompt" not in st.session_state:
+    st.session_state["model_prompt"] = "Você é um assistente prestativo. Responda de forma clara e concisa, mantendo a personalidade do personagem definido pelo usuário."  # Default prompt
 
 # get the websocket headers and session id
 
@@ -49,13 +52,27 @@ session_id = get_remote_ip()
 nsfw_password = os.getenv("CHAT_NSFW_PASSWORD")
 
 
+def fetch_models():
+    """Busca modelos disponíveis do backend"""
+    try:
+        # Tentar buscar os modelos do backend
+        response = requests.get("http://localhost:8000/api/v1/models", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return []
+    except Exception as e:
+        st.warning(f"Não foi possível carregar os modelos do backend: {e}")
+        return []
+
+
 @st.cache_resource
 def get_agent(
     session_id,
     model="open-mistral-7b",
+    model_prompt=None
 ):
     """Create an AI agent.  Returns an AIAgent object."""
-    agent = AIAgent(model=model)
+    agent = AIAgent(model=model, model_prompt=model_prompt)
     return agent
 
 
@@ -122,14 +139,14 @@ def load_character(file):
 def change_model():
     """Change the AI's model.  Returns nothing."""
     if "agent" in st.session_state and "model_name" in st.session_state:
-        st.session_state["agent"].set_model(st.session_state["model_name"])
+        st.session_state["agent"].set_model(st.session_state["model_name"], st.session_state.get("model_prompt"))
     else:
         if "model_name" in st.session_state:
             st.session_state["agent"] = get_agent(
-                session_id, model=st.session_state["model_name"]
+                session_id, model=st.session_state["model_name"], model_prompt=st.session_state.get("model_prompt")
             )
         else:
-            st.session_state["agent"] = get_agent(session_id)
+            st.session_state["agent"] = get_agent(session_id, model_prompt=st.session_state.get("model_prompt"))
 
 
 def change_summary_model():
@@ -142,10 +159,11 @@ def change_summary_model():
         if "summary_model_name" in st.session_state:
             st.session_state["agent"] = get_agent(
                 session_id,
-                model=st.session_state["model_name"]
+                model=st.session_state["model_name"],
+                model_prompt=st.session_state.get("model_prompt")
             )
         else:
-            st.session_state["agent"] = get_agent(session_id)
+            st.session_state["agent"] = get_agent(session_id, model_prompt=st.session_state.get("model_prompt"))
 
 
 def set_nsfw():
@@ -256,37 +274,76 @@ with st.sidebar:
 
         # set the model
         st.markdown("### Choose a model")
-        st.radio(
-            "Summary Models",
-            horizontal=False,
-            options=[
-                "gemini-2.5-flash",
-                "claude-3-haiku-20240307",
-                "gpt-4o-mini",
-                "gpt-5-mini"
-            ],
-            index=3,
-            format_func=format_model_label,
-            key="summary_model_name",
-            on_change=change_summary_model,
-        )
-        st.radio(
-            "Models",
-            horizontal=False,
-            options=[
-                "gemini-2.5-flash",
-                # "hermes-3-llama-3.1-405b-fp8",
-                "gpt-4o-mini",
-                "gpt-5-mini",
-                "mistralai/Mistral-7B-Instruct-v0.3",
-                "claude-3-haiku-20240307",
-                "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
-            ],
-            index=2,
-            format_func=format_model_label,
-            key="model_name",
-            on_change=change_model,
-        )
+        
+        # Buscar modelos do backend
+        models = fetch_models()
+        
+        if models:
+            # Criar dicionário de opções com displayName como chave e name como valor
+            model_options = {model["displayName"]: model["name"] for model in models}
+            model_prompts = {model["name"]: model["prompt"] for model in models}
+            
+            # Selectbox para modelos de resumo
+            selected_summary_display_name = st.selectbox(
+                "Summary Models",
+                options=list(model_options.keys()),
+                index=list(model_options.keys()).index("GPT 5 mini") if "GPT 5 mini" in model_options.keys() else 0,
+                key="summary_model_selection"
+            )
+            st.session_state["summary_model_name"] = model_options[selected_summary_display_name]
+            
+            # Selectbox para modelos principais
+            selected_display_name = st.selectbox(
+                "Models",
+                options=list(model_options.keys()),
+                index=list(model_options.keys()).index("GPT 5 mini") if "GPT 5 mini" in model_options.keys() else 0,
+                key="model_selection"
+            )
+            st.session_state["model_name"] = model_options[selected_display_name]
+            st.session_state["model_prompt"] = model_prompts.get(st.session_state["model_name"], "Você é um assistente prestativo. Responda de forma clara e concisa.")
+            
+            # Atualizar o agente quando o modelo mudar
+            if st.session_state["model_name"] != st.session_state.get("previous_model_name"):
+                change_model()
+                st.session_state["previous_model_name"] = st.session_state["model_name"]
+                
+            if st.session_state["summary_model_name"] != st.session_state.get("previous_summary_model_name"):
+                change_summary_model()
+                st.session_state["previous_summary_model_name"] = st.session_state["summary_model_name"]
+        else:
+            # Fallback para radio buttons se não conseguir buscar do backend
+            st.warning("Não foi possível carregar os modelos do backend. Usando opções padrão.")
+            st.radio(
+                "Summary Models",
+                horizontal=False,
+                options=[
+                    "gemini-2.5-flash",
+                    "claude-3-haiku-20240307",
+                    "gpt-4o-mini",
+                    "gpt-5-mini"
+                ],
+                index=3,
+                format_func=format_model_label,
+                key="summary_model_name",
+                on_change=change_summary_model,
+            )
+            st.radio(
+                "Models",
+                horizontal=False,
+                options=[
+                    "gemini-2.5-flash",
+                    # "hermes-3-llama-3.1-405b-fp8",
+                    "gpt-4o-mini",
+                    "gpt-5-mini",
+                    "mistralai/Mistral-7B-Instruct-v0.3",
+                    "claude-3-haiku-20240307",
+                    "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+                ],
+                index=2,
+                format_func=format_model_label,
+                key="model_name",
+                on_change=change_model,
+            )
 
         # set the NSFW mode
         user_nsfw_password = st.text_input(
@@ -307,7 +364,7 @@ with st.sidebar:
 # get the agent
 if "agent" not in st.session_state:
     st.session_state["agent"] = get_agent(
-        session_id, model=st.session_state["model_name"]
+        session_id, model=st.session_state["model_name"], model_prompt=st.session_state.get("model_prompt")
     )
 else:
     # set the model

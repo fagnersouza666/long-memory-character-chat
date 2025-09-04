@@ -117,3 +117,13 @@ model Evaluation {
   employee  User @relation("EmployeeEvaluations", fields: [employeeId], references: [id])
   evaluator User? @relation("EvaluatorEvaluations", fields: [evaluatorId], references: [id])
 }
+
+model Model {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  displayName String
+  prompt      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
