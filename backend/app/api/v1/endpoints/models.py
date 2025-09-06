@@ -3,7 +3,7 @@ from typing import List
 import asyncio
 from prisma import Prisma
 
-from backend.app.schemas.model import Model
+from app.schemas.model import Model
 
 router = APIRouter()
 
