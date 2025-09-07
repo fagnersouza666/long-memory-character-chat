@@ -83,3 +83,7 @@ backend/
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
+
+## Contribuição
+- Diretrizes para contribuição, estilo de código, testes e PRs: consulte o documento raiz [AGENTS.md](../AGENTS.md).
+- Guia geral do projeto e comandos rápidos no [README do repositório](../README.md).
