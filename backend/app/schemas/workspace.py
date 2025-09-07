@@ -18,7 +18,7 @@ class Workspace(WorkspaceBase):
     updatedAt: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class WorkspaceUserBase(BaseModel):
     userId: int
@@ -30,4 +30,4 @@ class WorkspaceUserCreate(WorkspaceUserBase):
 
 class WorkspaceUser(WorkspaceUserBase):
     class Config:
-        orm_mode = True
+        from_attributes = True

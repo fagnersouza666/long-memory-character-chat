@@ -17,7 +17,7 @@ class Organization(OrganizationBase):
     updatedAt: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class OrganizationUserBase(BaseModel):
     userId: int
@@ -29,4 +29,4 @@ class OrganizationUserCreate(OrganizationUserBase):
 
 class OrganizationUser(OrganizationUserBase):
     class Config:
-        orm_mode = True
+        from_attributes = True

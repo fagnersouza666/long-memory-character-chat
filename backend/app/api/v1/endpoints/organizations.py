@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from prisma import Prisma
 
-from app.schemas.organization import Organization, OrganizationCreate, OrganizationUpdate, OrganizationUser
+from app.schemas.organization import Organization, OrganizationCreate, OrganizationUpdate, OrganizationUser, OrganizationUserCreate
 from app.core.security import get_current_user
 from app.models.user import User as UserModel
 from app.database.session import get_db

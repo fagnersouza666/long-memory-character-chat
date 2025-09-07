@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from prisma import Prisma
 
-from app.schemas.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate, WorkspaceUser
+from app.schemas.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate, WorkspaceUser, WorkspaceUserCreate
 from app.core.security import get_current_user
 from app.models.user import User as UserModel
 from app.database.session import get_db
