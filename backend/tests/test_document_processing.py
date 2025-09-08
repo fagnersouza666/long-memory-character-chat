@@ -10,7 +10,7 @@ def test_create_processing_task(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Primeiro, fazer upload de um documento
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     upload_response = test_client.post(
@@ -63,7 +63,7 @@ def test_get_processing_task(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Primeiro, fazer upload de um documento
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     upload_response = test_client.post(

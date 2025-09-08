@@ -10,7 +10,7 @@ def test_upload_document(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Criar um arquivo de teste
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     response = test_client.post(
@@ -34,7 +34,7 @@ def test_list_documents(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Upload de um documento de teste
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     test_client.post(
@@ -59,7 +59,7 @@ def test_get_document(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Upload de um documento de teste
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     upload_response = test_client.post(
@@ -88,7 +88,7 @@ def test_update_document(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Upload de um documento de teste
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     upload_response = test_client.post(
@@ -120,7 +120,7 @@ def test_delete_document(test_client, create_test_user):
     headers = {"Authorization": f"Bearer {create_test_user['token']}"}
     
     # Upload de um documento de teste
-    test_file = io.BytesIO(b"Conteúdo de teste para o documento")
+    test_file = io.BytesIO("Conteúdo de teste para o documento".encode("utf-8"))
     test_file.name = "test_document.txt"
     
     upload_response = test_client.post(
