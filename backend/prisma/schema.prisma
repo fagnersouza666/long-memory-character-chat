@@ -97,7 +97,7 @@ model DocumentChunk {
   id         Int      @id @default(autoincrement())
   documentId Int
   content    String
-  embedding  Bytes?   // Vetor armazenado como bytes inicialmente
+  embedding  Unsupported("vector")?   // Vetor armazenado como pgvector
   createdAt  DateTime @default(now())
   
   // Relacionamentos

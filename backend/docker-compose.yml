@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: rag_postgres_5433
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag_enterprise
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata5433:/var/lib/postgresql/data
+      - ./docker/initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag_enterprise"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata5433:
